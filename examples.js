@@ -1,5 +1,17 @@
 const GWEI = '1000000000';
 
+/**
+  * 
+  * @param {Array} abi abi interfaces of the contract
+  * @param {string} bin binary code of the contract
+  * @returns {Object} contract web3 contract object
+  */
+ function createContract (abi, bin) {
+    let contract = new web3.eth.Contract(abi, {data: bin});
+    return contract;
+}
+
+
 
 /**
  * This is a more concise way to send transaction,
@@ -71,16 +83,6 @@ function sendTx (fromAccount, toAddress, nonce, gas, value, data) {
 
 
 
- /**
-  * 
-  * @param {Array} abi abi interfaces of the contract
-  * @param {string} bin binary code of the contract
-  * @returns {Object} contract web3 contract object
-  */
-function createContract (abi, bin) {
-    let contract = new web3.eth.Contract(abi, {data: bin});
-    return contract;
-}
 
 
 
@@ -132,7 +134,7 @@ function createContract (abi, bin) {
  */  
 function deployContract (fromAccount, contract, args) {
     contract.deploy({
-        data: contract.options.data, 
+        data: contract.options.data,
         arguments: args
     })
     .estimateGas( (err, gas) => {
@@ -297,11 +299,12 @@ function writeIntoContractAsync (fromAccount, contract, funName, args = [], valu
             gas = gas + 210000; //add a little bit more to the estimated Gas
             sendTxAsync (fromAccount, contract.options.address, 0, gas, value, data)
             .then ( receipt => resolve(receipt) )
-            .catch (error => reject (error))
+            .catch ( error => reject (error) )
         })
         .catch (error => reject(error))
     })
 }
+
 
 /**
  * This is a more general way to deploy contract asynchronously, 
@@ -309,6 +312,8 @@ function writeIntoContractAsync (fromAccount, contract, funName, args = [], valu
  * @param {Object} fromAccount web3 account object
  * @param {Object} contract web3 contract object
  * @param {array} args 
+ * @param {BigNumber || string} value
+ * @return {Promise} Promise object represents the receipt of the transaction
  */  
 function deployContractAsync (fromAccount, contract, args = [], value = 0) {
     return new Promise(function(resolve, reject) {
@@ -317,8 +322,9 @@ function deployContractAsync (fromAccount, contract, args = [], value = 0) {
             arguments: args
         })
         .estimateGas( (err, gas) => {
+            console.log(gas);
             gas = gas + 210000; //add a little bit more to the estimated Gas
-            sendTxAsync (fromAccount, contract.options.address, 0, gas, value, data)
+            sendTxAsync (fromAccount, '', 0, gas, value, contract.options.data)
             .then ( receipt => resolve(receipt) )
             .catch (error => reject (error))
         })
