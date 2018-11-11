@@ -1,10 +1,13 @@
-const GWEI = '1000000000';
+const GWEI = 1000000000;
+const ETHER = 1000000000000000000;
 
-/**
-  * 
+
+
+ /**
+  * Create web3 contract object with ABI and binary EVM code
   * @param {Array} abi abi interfaces of the contract
   * @param {string} bin binary code of the contract
-  * @returns {Object} contract web3 contract object
+  * @returns {Object} web3 contract object
   */
  function createContract (abi, bin) {
     let contract = new web3.eth.Contract(abi, {data: bin});
@@ -18,12 +21,12 @@ const GWEI = '1000000000';
  * if the sender's account is not in the wallet.
  * @param {Object} fromAccount web3 account object
  * @param {string} toAddress web3 account object
- * @param {number || string} nonce 
- * @param {number || string} gas 
- * @param {BigNumber || number} value 
- * @param {string} data 
- */
-// function sendTx  (fromAccount, toAddress, nonce = undefined, gas, value, data) {
+ * @param {(BigNumber|number|string)} [value=0]
+ * @param {(number|string)} [nonce=0] 
+ * @param {(number|string)} [gas=27000] 
+ * @param {string} [data='']
+ */ 
+// function sendTx  (fromAccount, toAddress, value = 0, nonce = 0, gas = 27000, data = '') {
 //     web3.eth.sendTransaction({
 //         from: fromAccount.address,
 //         to: toAddress,
@@ -41,17 +44,18 @@ const GWEI = '1000000000';
 // }
 
 
+
 /**
  * This is a more general way to send transaction,
  * if the sender's account is not in the wallet.
  * @param {Object} fromAccount web3 account object
  * @param {string} toAddress web3 account object
- * @param {number || string} nonce 
- * @param {number || string} gas 
- * @param {BigNumber || number} value 
- * @param {string} data 
+ * @param {(BigNumber|number|string)} [value=0]
+ * @param {(number|string)} [nonce=0] 
+ * @param {(number|string)} [gas=27000] 
+ * @param {string} [data='']
  */ 
-function sendTx (fromAccount, toAddress, nonce, gas, value, data) {
+function sendTx (fromAccount, toAddress, value = 0, nonce = 0, gas = 27000, data = '') {
     web3.eth.getTransactionCount(fromAccount.address)
     .then( result => {
         let tx = {
@@ -83,17 +87,14 @@ function sendTx (fromAccount, toAddress, nonce, gas, value, data) {
 
 
 
-
-
-
 /**
  * This is a more concise way to deploy contract, 
  * if the sender's account is added in the wallet.
  * @param {Object} fromAccount web3 account object
  * @param {Object} contract web3 contract object
- * @param {array} args 
+ * @param {array} [args=[]] 
  */  
-// function deployContract (fromAccount, contract, args) {
+// function deployContract (fromAccount, contract, args=[]) {
 //     contract.deploy({
 //         data: contract.options.data,
 //         arguments: args
@@ -130,9 +131,9 @@ function sendTx (fromAccount, toAddress, nonce, gas, value, data) {
  * if the sender's account is not in the wallet.
  * @param {Object} fromAccount web3 account object
  * @param {Object} contract web3 contract object
- * @param {array} args 
+ * @param {array} [args=[]] 
  */  
-function deployContract (fromAccount, contract, args) {
+function deployContract (fromAccount, contract, args=[]) {
     contract.deploy({
         data: contract.options.data,
         arguments: args
@@ -140,7 +141,6 @@ function deployContract (fromAccount, contract, args) {
     .estimateGas( (err, gas) => {
         console.log(gas);
         gas = gas + 210000; //add a little bit more to the estimated Gas
-
         let tx = {
             nonce: nonce,
             gasPrice: GWEI,
@@ -159,12 +159,13 @@ function deployContract (fromAccount, contract, args) {
                 console.log(receipt);
                 contract.options.address = receipt.contractAddress;
             })
-            .on('error', console.error);
+            .catch (console.log)
         })
-        .catch(e => console.log(e))
+        .catch (console.log)
     })
     .catch (console.log)
 }
+
 
 
 /**
@@ -173,7 +174,7 @@ function deployContract (fromAccount, contract, args) {
  * @param {Object} fromAccount web3 account object
  * @param {Object} contract web3 contract object
  * @param {string} funName
- * @param {array} args
+ * @param {array} [args=[]] 
  */  
 function writeIntoContract (fromAccount, contract, funName, args = []) {
     let data = contract.methods[funName](...args).encodeABI();
@@ -186,13 +187,15 @@ function writeIntoContract (fromAccount, contract, funName, args = []) {
     .catch (console.log)
 }
 
+
+
 /**
  * This is a concise way to write into the contract, 
  * if the sender's account is added in the wallet.
  * @param {Object} fromAccount web3 account object
  * @param {Object} contract web3 contract object
  * @param {string} funName
- * @param {array} args
+ * @param {array} [args=[]] 
  */   
 // function writeIntoContract (fromAccount, contract, funName, args = []) {
 //     contract.methods[funName](...args)
@@ -214,12 +217,11 @@ function writeIntoContract (fromAccount, contract, funName, args = []) {
 
 
 
-
 /**
  * This is to read the return value from the contract
  * @param {Object} contract web3 contract object
  * @param {string} funName 
- * @param {array} args 
+ * @param {array} [args=[]] 
  */
 function readFromContract (contract, funName, args = []) {    
     contract.methods[funName](...args)
@@ -229,29 +231,18 @@ function readFromContract (contract, funName, args = []) {
 
 
 
-
-/**
- * This is to read the return value from the contract asynchronously
- * @param {Object} contract web3 contract object
- * @param {string} funName 
- * @returns {Promise} Promise object represents the "reading" from the contract
- */
-function readFromContractAsync(contract, funName, args = []) {
-    return contract.methods[funName](...args).call();
-}
-
 /**
  * This is a more general way to send transaction asynchronously,
  * if the sender's account is not in the wallet.
  * @param {Object} fromAccount web3 account object
  * @param {string} toAddress web3 account object
- * @param {number || string} nonce 
- * @param {number || string} gas 
- * @param {BigNumber || number} value 
- * @param {string} data
+ * @param {(BigNumber|number|string)} [value=0]
+ * @param {(number|string)} [nonce=0] 
+ * @param {(number|string)} [gas=27000] 
+ * @param {string} [data='']
  * @returns {Promise} Promise object represents the receipt of the transaction
  */ 
-function sendTxAsync (fromAccount, toAddress, nonce, gas, value, data) {
+function sendTxAsync (fromAccount, toAddress, value = 0, nonce = 0, gas = 27000, data = '') {
     return new Promise(function(resolve, reject) {
         web3.eth.getTransactionCount(fromAccount.address)
         .then( n => {
@@ -281,39 +272,15 @@ function sendTxAsync (fromAccount, toAddress, nonce, gas, value, data) {
 }
 
 
-/**
- * This is a more general way to write into the contract asynchronously, 
- * if the sender's account is not in the wallet.
- * @param {Object} fromAccount web3 account object
- * @param {Object} contract web3 contract object
- * @param {string} funName
- * @param {array} args
- * @returns {Promise} Promise object represents the receipt of the transaction
- */  
-function writeIntoContractAsync (fromAccount, contract, funName, args = [], value = 0) {
-    let data = contract.methods[funName](...args).encodeABI();
-    return new Promise(function(resolve, reject) {
-        contract.methods[funName](...args)
-        .estimateGas( (err, gas) => {
-            console.log(gas);
-            gas = gas + 210000; //add a little bit more to the estimated Gas
-            sendTxAsync (fromAccount, contract.options.address, 0, gas, value, data)
-            .then ( receipt => resolve(receipt) )
-            .catch ( error => reject (error) )
-        })
-        .catch (error => reject(error))
-    })
-}
-
 
 /**
  * This is a more general way to deploy contract asynchronously, 
  * if the sender's account is not in the wallet.
  * @param {Object} fromAccount web3 account object
  * @param {Object} contract web3 contract object
- * @param {array} args 
- * @param {BigNumber || string} value
- * @return {Promise} Promise object represents the receipt of the transaction
+ * @param {array} [args=[]]
+ * @param {(BigNumber|number|string)} [value=0]
+ * @return {Promise} Promise object represents the receipt of the deployed contract
  */  
 function deployContractAsync (fromAccount, contract, args = [], value = 0) {
     return new Promise(function(resolve, reject) {
@@ -324,10 +291,49 @@ function deployContractAsync (fromAccount, contract, args = [], value = 0) {
         .estimateGas( (err, gas) => {
             console.log(gas);
             gas = gas + 210000; //add a little bit more to the estimated Gas
-            sendTxAsync (fromAccount, '', 0, gas, value, contract.options.data)
+            sendTxAsync (fromAccount, '', value, 0, gas, contract.options.data)
             .then ( receipt => resolve(receipt) )
             .catch (error => reject (error))
         })
         .catch (error => reject(error))
     })
+}
+
+
+
+/**
+ * This is a more general way to write into the contract asynchronously, 
+ * if the sender's account is not in the wallet.
+ * @param {Object} fromAccount web3 account object
+ * @param {Object} contract web3 contract object
+ * @param {string} funName
+ * @param {array} [args=[]]
+ * @param {(BigNumber|number|string)} [value=0]
+ * @returns {Promise} Promise object represents the receipt of the transaction
+ */ 
+function writeIntoContractAsync (fromAccount, contract, funName, args = [], value = 0) {
+    let data = contract.methods[funName](...args).encodeABI();
+    return new Promise(function(resolve, reject) {
+        contract.methods[funName](...args)
+        .estimateGas( (err, gas) => {
+            console.log(gas);
+            gas = gas + 210000; //add a little bit more to the estimated Gas
+            sendTxAsync (fromAccount, contract.options.address, value, 0, gas, data)
+            .then ( receipt => resolve(receipt) )
+            .catch ( error => reject (error) )
+        })
+        .catch (error => reject(error))
+    })
+}
+
+
+
+/**
+ * This is to read the return value from the contract asynchronously
+ * @param {Object} contract web3 contract object
+ * @param {string} funName 
+ * @returns {Promise} Promise object represents the "reading" from the contract
+ */
+function readFromContractAsync(contract, funName, args = []) {
+    return contract.methods[funName](...args).call();
 }
